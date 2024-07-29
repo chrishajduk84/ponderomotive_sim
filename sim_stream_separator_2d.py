@@ -47,16 +47,16 @@ fig = plt.figure()
 ax = fig.gca()
 
 # Initialize electrostatic grid - Pattern: every 25cm
-y_spacing = np.linspace(y_limits[0], y_limits[1], 100000)
+y_spacing = np.linspace(y_limits[0], y_limits[1], 100)
 for i in y_spacing:
     fixed_particles.append(FixedParticle2D((x_limits[1] - x_limits[0])/2, i, ELEMENTARY_CHARGE))
 for i in y_spacing:
     fixed_particles.append(FixedParticle2D((x_limits[1] - x_limits[0])/2+0.01, i, -ELEMENTARY_CHARGE))
 
-NUM_TIME_STEPS = 10000000
+NUM_TIME_STEPS = 10000
 TIME_STEP = (x_limits[1] - x_limits[0])/SOLAR_WIND_SPEED/NUM_TIME_STEPS
 for t in range(NUM_TIME_STEPS):
-    if t < 50:
+    if t < 2:
         particle_generator(sim_particles, x_limits, y_limits, TIME_STEP)
 
     if t % 20 == 0:
@@ -70,17 +70,19 @@ for t in range(NUM_TIME_STEPS):
                     f.charge = -ELEMENTARY_CHARGE
 
     for p in sim_particles:
+        force_x = 0.0
+        force_y = 0.0
         for f in fixed_particles:
             rx = p.x - f.x
             ry = p.y - f.y
-            force_x = 1/(4*PI*VACUUM_PERMITIVITY)*p.charge*f.charge/(rx**2) * (-1 if rx < 0 else 1)
-            force_y = 1/(4*PI*VACUUM_PERMITIVITY)*p.charge*f.charge/(ry**2) * (-1 if ry < 0 else 1)
-            accel_x = force_x/p.mass
-            accel_y = force_y/p.mass
-            p.vx += accel_x*TIME_STEP
-            p.vy += accel_y*TIME_STEP
-            p.x += p.vx*TIME_STEP
-            p.y += p.vy*TIME_STEP
+            force_x += 1/(4*PI*VACUUM_PERMITIVITY)*p.charge*f.charge/(rx**2) * (-1 if rx < 0 else 1)
+            force_y += 1/(4*PI*VACUUM_PERMITIVITY)*p.charge*f.charge/(ry**2) * (-1 if ry < 0 else 1)
+        accel_x = force_x/p.mass
+        accel_y = force_y/p.mass
+        p.vx += accel_x*TIME_STEP
+        p.vy += accel_y*TIME_STEP
+        p.x += p.vx*TIME_STEP
+        p.y += p.vy*TIME_STEP
         # for q in sim_particles:
         #     if p == q:
         #         continue
@@ -116,6 +118,7 @@ for t in range(NUM_TIME_STEPS):
     sim_particles_positive = []
     sim_particles_negative = []
     for p in sim_particles:
+        print(f"{p.x}, {p.vx}")
         if p.charge > 0:
             sim_particles_positive.append(p)
         else:
